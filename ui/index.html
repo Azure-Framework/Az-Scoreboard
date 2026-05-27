@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Azure Scoreboard</title>
+  <script src="config.js"></script>
+  <style>
+:root{
+  --mm-bg-0: #0a0f16;
+  --mm-bg-1: #0e1520;
+  --mm-panel: rgba(14, 20, 30, 0.62);
+  --mm-panel-2: rgba(12, 18, 28, 0.72);
+  --mm-text: rgba(255,255,255,.92);
+  --mm-muted: rgba(255,255,255,.62);
+  --mm-dim: rgba(255,255,255,.46);
+  --mm-accent: #2aa4d8;
+  --mm-accent-2: #0c6aa8;
+  --mm-radius: 16px;
+  --mm-radius-sm: 12px;
+  --mm-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+html, body{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: var(--mm-text);
+  font-family: var(--mm-font);
+  letter-spacing: .2px;
+  background: transparent;
+}
+#app.mm{
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background:
+    radial-gradient(1100px 520px at 30% 15%, rgba(42,164,216,.18), transparent 60%),
+    radial-gradient(900px 520px at 80% 80%, rgba(10,110,168,.16), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.55));
+}
+#app.mm .mm-window{
+  width: min(1200px, 94vw);
+  height: min(720px, 90vh);
+  border-radius: 22px;
+  background: rgba(10, 14, 22, 0.58);
+  overflow: hidden;
+  position: relative;
+}
+#app.mm .mm-window::before{
+  content:"";
+  position:absolute; inset:-60px;
+  background:
+    radial-gradient(700px 420px at 20% 35%, rgba(255,255,255,.06), transparent 60%),
+    radial-gradient(700px 420px at 85% 25%, rgba(255,255,255,.05), transparent 60%),
+    radial-gradient(800px 520px at 60% 90%, rgba(0,0,0,.25), transparent 60%);
+  filter: blur(6px);
+  pointer-events:none;
+}
+#app.mm .mm-header{
+  position: relative;
+  padding: 18px 22px 14px;
+  background: linear-gradient(180deg, rgba(18,32,48,.86), rgba(12,18,28,.72));
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+#app.mm .mm-header::after{
+  content:"";
+  position:absolute; left:0; right:0; bottom:-1px; height:2px;
+  background: linear-gradient(90deg, transparent, rgba(42,164,216,.65), transparent);
+  opacity:.9;
+}
+#app.mm .mm-headerRow{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 16px;
+}
+#app.mm .mm-brand{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+#app.mm .mm-brandTop{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+#app.mm .mm-brandLogo{
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  display:grid;
+  place-items:center;
+  flex: 0 0 auto;
+}
+#app.mm .mm-brandLogo img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#app.mm .mm-brandTitle{
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 28px;
+  text-transform: uppercase;
+}
+#app.mm .mm-brandSub{
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: rgba(42,164,216,.95);
+  font-weight: 700;
+}
+#app.mm .mm-headRight{
+  text-align:right;
+  padding-top: 2px;
+}
+#app.mm .mm-headRightTitle{
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-size: 16px;
+}
+#app.mm .mm-headRightSub{
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--mm-muted);
+}
+#app.mm .mm-controls{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+  margin-top: 14px;
+}
+#app.mm .mm-tabs{
+  display:flex;
+  gap: 8px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  padding: 4px;
+  flex-wrap: wrap;
+}
+#app.mm .mm-tab{
+  appearance:none;
+  border: 0;
+  background: transparent;
+  color: rgba(255,255,255,.70);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: .6px;
+  cursor: pointer;
+  transition: .15s ease;
+  text-transform: capitalize;
+}
+#app.mm .mm-tab:hover{
+  color: rgba(255,255,255,.92);
+  background: rgba(255,255,255,.06);
+}
+#app.mm .mm-tab.is-active{
+  color: rgba(255,255,255,.95);
+  background: linear-gradient(180deg, rgba(42,164,216,.25), rgba(42,164,216,.12));
+  border: 1px solid rgba(42,164,216,.35);
+}
+#app.mm .mm-controlsRight{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-end;
+  min-width: 0;
+}
+#app.mm .mm-pill{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.80);
+  font-size: 12px;
+  letter-spacing: .4px;
+  white-space: nowrap;
+}
+#app.mm .mm-pill .dot{
+  width: 8px; height: 8px; border-radius: 99px;
+  background: rgba(120,255,120,.85);
+  box-shadow: 0 0 0 4px rgba(120,255,120,.12);
+}
+#app.mm .mm-content{
+  position: relative;
+  padding: 18px 22px 18px;
+}
+#app.mm .mm-sectionTitle{
+  font-size: 13px;
+  color: rgba(255,255,255,.72);
+  margin: 2px 0 14px;
+}
+#app.mm .mm-grid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+#app.mm .mm-card{
+  border-radius: var(--mm-radius);
+  background: rgba(12,18,28,.55);
+  border: 1px solid rgba(255,255,255,.10);
+  overflow: hidden;
+  position: relative;
+  transform: translateZ(0);
+}
+#app.mm .mm-card__media{
+  height: 140px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+#app.mm .mm-card__media::after{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.58));
+}
+#app.mm .mm-stamp{
+  position:absolute;
+  top: 10px;
+  left: 12px;
+  z-index: 2;
+  display:flex;
+  flex-direction: column;
+  gap: 2px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 800;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,.55));
+}
+#app.mm .mm-stamp .t1{
+  font-size: 13px;
+}
+#app.mm .mm-stamp .t2{
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(42,164,216,.95);
+}
+#player-list{
+  display:flex;
+  flex-direction:column;
+  max-height: 430px;
+  overflow:auto;
+}
+.mm-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  background: rgba(0,0,0,.10);
+}
+.mm-row:nth-child(even){
+  background: rgba(0,0,0,.15);
+}
+.mm-rowLeft{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width:0;
+}
+.mm-rowId{
+  width: 28px;
+  text-align:center;
+  font-weight: 800;
+  color: rgba(255,255,255,.88);
+  opacity:.9;
+  flex: 0 0 auto;
+}
+.mm-rowName{
+  font-weight: 700;
+  color: rgba(255,255,255,.92);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width: 520px;
+}
+.mm-rowJob{
+  font-size: 11px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.72);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.mm-rowPing{
+  font-size: 12px;
+  color: rgba(120,255,120,.90);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.mm-empty{
+  padding: 20px 14px;
+  color: rgba(255,255,255,.68);
+  font-size: 13px;
+}
+#app.mm .mm-footer{
+  position:absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  color: rgba(255,255,255,.60);
+  font-size: 12px;
+}
+#app.mm .mm-counts{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#app.mm .mm-badge{
+  --tab-color: rgba(42,164,216,.95);
+  --tab-glow: rgba(42,164,216,.12);
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  letter-spacing: .2px;
+}
+#app.mm .mm-badge .b-dot{
+  width: 8px;
+  height: 8px;
+  border-radius: 99px;
+  background: var(--tab-color);
+  box-shadow: 0 0 0 4px var(--tab-glow);
+}
+#app.mm .mm-close{
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.20);
+  color: rgba(255,255,255,.88);
+  cursor:pointer;
+  transition: .15s ease;
+}
+#app.mm .mm-close:hover{
+  border-color: rgba(42,164,216,.35);
+  background: rgba(42,164,216,.08);
+}
+@media (max-width: 640px){
+  #app.mm .mm-window{ width: 94vw; height: 90vh; }
+  #app.mm .mm-brandTitle{ font-size: 22px; }
+  .mm-rowName{ max-width: 240px; }
+}
+  </style>
+</head>
+<body>
+  <div id="app" class="mm">
+    <div class="mm-window">
+      <div class="mm-header">
+        <div class="mm-headerRow">
+          <div class="mm-brand">
+            <div class="mm-brandTop">
+              <div class="mm-brandLogo">
+                <img src="logo.png" alt="Logo"/>
+              </div>
+              <div class="mm-brandTitle" id="brand-title">AZURE SCRIPTS</div>
+            </div>
+            <div class="mm-brandSub" id="brand-subtitle">SCOREBOARD</div>
+          </div>
+          <div class="mm-headRight">
+            <div class="mm-headRightTitle" id="directory-title">PLAYER DIRECTORY</div>
+            <div class="mm-headRightSub" id="directory-subtitle">Live roster and department counts.</div>
+          </div>
+        </div>
+        <div class="mm-controls">
+          <div class="mm-tabs" id="mm-tabs"></div>
+          <div class="mm-controlsRight">
+            <div class="mm-pill">
+              <span class="dot"></span>
+              <span id="status-text">Ready</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mm-content">
+        <div class="mm-sectionTitle" id="section-title">Roster</div>
+        <div class="mm-grid">
+          <div class="mm-card">
+            <div class="mm-card__media" style="background-image: linear-gradient(135deg, rgba(42,164,216,.20), rgba(0,0,0,.08));">
+              <div class="mm-stamp">
+                <div class="t1" id="stamp-title">AZURE</div>
+                <div class="t2" id="stamp-subtitle">SCOREBOARD</div>
+              </div>
+            </div>
+            <div class="mm-card__bar" style="display:block; padding:0;">
+              <div id="player-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mm-footer">
+        <div class="mm-counts" id="mm-counts"></div>
+        <button class="mm-close" type="button" id="mm-close">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const app = document.getElementById('app');
+    if (app) app.style.display = 'none';
+
+    window.Config = window.Config || {};
+    Config.ui = Config.ui || { fontFamily: 'Arial, sans-serif' };
+
+    const IS_NUI = (typeof GetParentResourceName === 'function') || (location.protocol === 'nui:');
+    const DEV_PREVIEW = (!IS_NUI) && ((Config.ui.devPreview === true) || (new URLSearchParams(location.search).has('dev')));
+
+    if (Config.ui && Config.ui.fontFamily) {
+      document.documentElement.style.setProperty('--mm-font', Config.ui.fontFamily);
+    }
+
+    const closeBtn = document.getElementById('mm-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        if (IS_NUI) {
+          fetch(`https://${GetParentResourceName()}/close`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          }).catch(() => {});
+        } else if (app) {
+          app.style.display = 'none';
+        }
+      });
+    }
+
+    const DEFAULT_NUI_CONFIG = {
+      ui: {
+        fontFamily: 'Arial, sans-serif',
+        title: 'AZURE SCRIPTS',
+        subtitle: 'SCOREBOARD',
+        directoryTitle: 'PLAYER DIRECTORY',
+        directorySubtitle: 'Live roster and department counts.',
+        statusText: 'Ready',
+        sectionTitle: 'Roster',
+        stampTitle: 'AZURE',
+        stampSubtitle: 'SCOREBOARD',
+        closeLabel: 'Close'
+      },
+      tabs: [
+        { id: 'players', label: 'Players', badgeLabel: 'Players', showAll: true, showInFooter: false, jobs: [], color: 'rgba(42,164,216,.95)', glow: 'rgba(42,164,216,.12)' },
+        { id: 'police', label: 'Police', badgeLabel: 'Police', showAll: false, showInFooter: true, jobs: ['police', 'sheriff', 'state', 'trooper'], color: 'rgba(60,120,255,.95)', glow: 'rgba(60,120,255,.12)' },
+        { id: 'medics', label: 'Medics', badgeLabel: 'Medics', showAll: false, showInFooter: true, jobs: ['ambulance', 'medic', 'ems', 'doctor'], color: 'rgba(60,220,120,.95)', glow: 'rgba(60,220,120,.12)' },
+        { id: 'mechanic', label: 'Mechanic', badgeLabel: 'Mechanic', showAll: false, showInFooter: true, jobs: ['mechanic'], color: 'rgba(255,180,60,.95)', glow: 'rgba(255,180,60,.12)' }
+      ]
+    };
+
+    const MOCK_PLAYERS = [
+      { source: 1, fullname: 'Azure(TheStoicBear)', job: 'police', jobInfo: { name: 'police', label: 'Police', rawName: 'police' }, rankName: 'Captain', ping: 18 },
+      { source: 7, fullname: 'Doc Holiday', job: 'ems', jobInfo: { name: 'ems', label: 'Medics', rawName: 'ems' }, rankName: 'EMT', ping: 42 },
+      { source: 12, fullname: 'Wrench God', job: 'mechanic', jobInfo: { name: 'mechanic', label: 'Mechanic', rawName: 'mechanic' }, rankName: 'Senior', ping: 33 },
+      { source: 22, fullname: 'John Doe', job: 'civilian', jobInfo: { name: 'civilian', label: 'Civilian', rawName: 'civilian' }, rankName: '', ping: 55 }
+    ];
+
+    let scoreboardConfig = JSON.parse(JSON.stringify(DEFAULT_NUI_CONFIG));
+    let currentTabId = 'players';
+    let currentPlayers = [];
+
+    function normalizeTab(tab, index) {
+      return {
+        id: String(tab?.id || `tab_${index + 1}`),
+        label: String(tab?.label || tab?.id || `Tab ${index + 1}`),
+        badgeLabel: String(tab?.badgeLabel || tab?.label || tab?.id || `Tab ${index + 1}`),
+        showAll: tab?.showAll === true,
+        showInFooter: tab?.showInFooter !== false && tab?.showAll !== true,
+        jobs: Array.isArray(tab?.jobs) ? tab.jobs.map(v => String(v).toLowerCase()) : [],
+        color: String(tab?.color || 'rgba(42,164,216,.95)'),
+        glow: String(tab?.glow || 'rgba(42,164,216,.12)')
+      };
+    }
+
+    function applyConfig(nextConfig) {
+      scoreboardConfig = JSON.parse(JSON.stringify(DEFAULT_NUI_CONFIG));
+      if (nextConfig && typeof nextConfig === 'object') {
+        scoreboardConfig.ui = Object.assign({}, scoreboardConfig.ui, nextConfig.ui || {});
+        if (Array.isArray(nextConfig.tabs) && nextConfig.tabs.length > 0) {
+          scoreboardConfig.tabs = nextConfig.tabs.map(normalizeTab);
+        }
+      }
+
+      if (!Array.isArray(scoreboardConfig.tabs) || scoreboardConfig.tabs.length === 0) {
+        scoreboardConfig.tabs = DEFAULT_NUI_CONFIG.tabs.map(normalizeTab);
+      }
+
+      scoreboardConfig.tabs = scoreboardConfig.tabs.map(normalizeTab);
+
+      const firstTab = scoreboardConfig.tabs[0];
+      if (!scoreboardConfig.tabs.some(tab => tab.id === currentTabId)) {
+        currentTabId = firstTab ? firstTab.id : 'players';
+      }
+
+      if (scoreboardConfig.ui.fontFamily) {
+        document.documentElement.style.setProperty('--mm-font', scoreboardConfig.ui.fontFamily);
+      }
+
+      document.getElementById('brand-title').textContent = scoreboardConfig.ui.title || 'AZURE SCRIPTS';
+      document.getElementById('brand-subtitle').textContent = scoreboardConfig.ui.subtitle || 'SCOREBOARD';
+      document.getElementById('directory-title').textContent = scoreboardConfig.ui.directoryTitle || 'PLAYER DIRECTORY';
+      document.getElementById('directory-subtitle').textContent = scoreboardConfig.ui.directorySubtitle || 'Live roster and department counts.';
+      document.getElementById('status-text').textContent = scoreboardConfig.ui.statusText || 'Ready';
+      document.getElementById('section-title').textContent = scoreboardConfig.ui.sectionTitle || 'Roster';
+      document.getElementById('stamp-title').textContent = scoreboardConfig.ui.stampTitle || 'AZURE';
+      document.getElementById('stamp-subtitle').textContent = scoreboardConfig.ui.stampSubtitle || 'SCOREBOARD';
+      document.getElementById('mm-close').textContent = scoreboardConfig.ui.closeLabel || 'Close';
+
+      renderTabs();
+      renderFooterCounts();
+    }
+
+    function getCurrentTab() {
+      return scoreboardConfig.tabs.find(tab => tab.id === currentTabId) || scoreboardConfig.tabs[0] || normalizeTab(DEFAULT_NUI_CONFIG.tabs[0], 0);
+    }
+
+    function playerMatchesTab(player, tab) {
+      if (!tab || tab.showAll) return true;
+      const rawJob = String((player?.jobInfo?.rawName) || player?.rawJob || player?.job || '').toLowerCase();
+      const normalizedJob = String((player?.jobInfo?.name) || player?.job || rawJob || '').toLowerCase();
+      return (tab.jobs || []).includes(rawJob) || (tab.jobs || []).includes(normalizedJob);
+    }
+
+    function getPlayersForTab(tab) {
+      const players = Array.isArray(currentPlayers) ? currentPlayers : [];
+      if (!tab || tab.showAll) return players;
+      return players.filter(player => playerMatchesTab(player, tab));
+    }
+
+    function renderTabs() {
+      const tabsEl = document.getElementById('mm-tabs');
+      if (!tabsEl) return;
+      tabsEl.innerHTML = '';
+
+      scoreboardConfig.tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `mm-tab${tab.id === currentTabId ? ' is-active' : ''}`;
+        btn.textContent = tab.label;
+        btn.dataset.tabId = tab.id;
+        btn.addEventListener('click', () => {
+          currentTabId = tab.id;
+          renderTabs();
+          renderPlayers(currentPlayers);
+        });
+        tabsEl.appendChild(btn);
+      });
+    }
+
+    function renderFooterCounts() {
+      const countsEl = document.getElementById('mm-counts');
+      if (!countsEl) return;
+      countsEl.innerHTML = '';
+
+      scoreboardConfig.tabs
+        .filter(tab => tab.showInFooter !== false && tab.showAll !== true)
+        .forEach(tab => {
+          const count = getPlayersForTab(tab).length;
+          const badge = document.createElement('span');
+          badge.className = 'mm-badge';
+          badge.style.setProperty('--tab-color', tab.color || 'rgba(42,164,216,.95)');
+          badge.style.setProperty('--tab-glow', tab.glow || 'rgba(42,164,216,.12)');
+          badge.innerHTML = `<span class="b-dot"></span><span>${count} ${tab.badgeLabel || tab.label}</span>`;
+          countsEl.appendChild(badge);
+        });
+    }
+
+    function renderPlayers(players) {
+      currentPlayers = Array.isArray(players) ? players : [];
+      const list = document.getElementById('player-list');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const selectedTab = getCurrentTab();
+      const filtered = getPlayersForTab(selectedTab);
+
+      if (filtered.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'mm-empty';
+        empty.textContent = `No players found in ${selectedTab?.label || 'this tab'}.`;
+        list.appendChild(empty);
+      } else {
+        filtered.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'mm-row';
+          row.innerHTML = `
+            <div class="mm-rowLeft">
+              <div class="mm-rowId">${p.source ?? ''}</div>
+              <div class="mm-rowName" title="${(p.fullname ?? '')}">${p.fullname ?? ''}</div>
+              <div class="mm-rowJob">${(p.jobInfo && p.jobInfo.label) || p.job || ''}${p.rankName ? ` ${p.rankName}` : ''}</div>
+            </div>
+            <div class="mm-rowPing">${(p.ping ?? 0)}ms</div>
+          `;
+          list.appendChild(row);
+        });
+      }
+
+      renderFooterCounts();
+    }
+
+    function fetchPlayers() {
+      if (DEV_PREVIEW) {
+        renderPlayers(MOCK_PLAYERS);
+        return;
+      }
+
+      fetch(`https://${GetParentResourceName()}/fetchPlayers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      .then(r => r.json())
+      .then(players => renderPlayers(players))
+      .catch(() => renderPlayers([]));
+    }
+
+    window.addEventListener('message', ev => {
+      if (!ev || !ev.data) return;
+      if (ev.data.config) {
+        applyConfig(ev.data.config);
+      }
+      if (ev.data.action === 'show') {
+        if (app) app.style.display = 'grid';
+        fetchPlayers();
+      }
+      if (ev.data.action === 'hide') {
+        if (app) app.style.display = 'none';
+      }
+    });
+
+    applyConfig(DEFAULT_NUI_CONFIG);
+
+    if (DEV_PREVIEW) {
+      if (app) app.style.display = 'grid';
+      fetchPlayers();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Home' || e.key === 'Escape') {
+        if (typeof GetParentResourceName === 'function') {
+          fetch(`https://${GetParentResourceName()}/close`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+          }).catch(() => {});
+        }
+      }
+    });
+</script>
+</body>
+</html>
